@@ -21,6 +21,7 @@ interface ChatPanelProps {
   documentId: string;
   fileName: string;
   isIndexed: boolean;
+  className?: string;
 }
 
 function createMessage(
@@ -36,7 +37,12 @@ function createMessage(
   };
 }
 
-export function ChatPanel({ documentId, fileName, isIndexed }: ChatPanelProps) {
+export function ChatPanel({
+  documentId,
+  fileName,
+  isIndexed,
+  className,
+}: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatPanelMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +85,9 @@ export function ChatPanel({ documentId, fileName, isIndexed }: ChatPanelProps) {
   };
 
   return (
-    <div className="flex h-[58vh] min-h-[460px] flex-col rounded-md border border-zinc-900 bg-zinc-950/70">
+    <div
+      className={`flex h-[58vh] min-h-[460px] flex-col rounded-md border border-zinc-900 bg-zinc-950/70 ${className ?? ""}`}
+    >
       <div className="border-b border-zinc-900 px-4 py-3">
         <p className="text-sm font-semibold text-zinc-100">Chat with Document</p>
         <p className="mt-0.5 truncate text-xs text-zinc-500">{fileName}</p>

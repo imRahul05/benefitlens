@@ -3,6 +3,7 @@ import type {
   DocumentChunksResponse,
   IndexDocumentResponse,
   JobStatusResponse,
+  ParsedDocumentsResponse,
   UploadResponse,
 } from "../../types/api.types";
 import type { JobStatus } from "../../types/job.types";
@@ -47,6 +48,10 @@ export async function getDocumentChunks(
   jobId: string,
 ): Promise<DocumentChunksResponse> {
   return http.get<DocumentChunksResponse>(`/api/documents/${jobId}/chunks`);
+}
+
+export async function getParsedDocuments(): Promise<ParsedDocumentsResponse> {
+  return http.get<ParsedDocumentsResponse>("/api/documents");
 }
 
 /**

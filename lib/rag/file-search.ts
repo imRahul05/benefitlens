@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import type { ChatResponse, ChatSource } from "@/types/api.types";
 import { OPENAI_RAG_MODEL } from "@/config/env.config";
 
-const DEFAULT_RAG_MODEL = "gpt-4.1-mini";
+
 
 export class RagChatError extends Error {
   statusCode: number;

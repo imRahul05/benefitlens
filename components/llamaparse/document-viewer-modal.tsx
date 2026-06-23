@@ -208,6 +208,7 @@ export function DocumentViewerModal({
         <div className="flex-1 overflow-y-auto mt-4 pr-1 rounded-md">
           {activeView === "chat" ? (
             <ChatPanel
+              key={job.internalJobId}
               documentId={job.internalJobId}
               fileName={job.fileName}
               isIndexed={!!activeVectorStoreId}

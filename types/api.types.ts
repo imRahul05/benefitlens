@@ -27,6 +27,21 @@ export interface DocumentChunksResponse {
   chunks: DocumentChunkResponse[];
 }
 
+export interface ParsedDocumentSummary {
+  id: string;
+  fileName: string;
+  fileSize: number | null;
+  status: JobStatus;
+  vectorStoreId: string | null;
+  chunkCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ParsedDocumentsResponse {
+  documents: ParsedDocumentSummary[];
+}
+
 export interface IndexDocumentResponse {
   documentId: string;
   chunkCount: number;
