@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Ban, AlertCircle, Trash2 } from "lucide-react";
+import { FileText, Ban, AlertCircle, Trash2, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ProgressSteps } from "./progress-steps";
@@ -78,6 +78,12 @@ export function IngestionLogsList({
                           <span className="font-mono text-[10px] text-zinc-400">
                             {job.internalJobId.slice(0, 8)}...
                           </span>
+                          {job.vectorStoreId && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-emerald-500">
+                              <Database className="h-3 w-3" />
+                              Indexed
+                            </span>
+                          )}
                         </p>
                       </div>
                     </div>
@@ -119,7 +125,7 @@ export function IngestionLogsList({
                           className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 text-xs py-1 h-7"
                           onClick={() => onViewResult(job)}
                         >
-                          Viewer
+                          Details
                         </Button>
                       )}
 

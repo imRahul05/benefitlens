@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Spinner } from "@/components/ui/spinner";
 import { uploadDocument, getJobStatus, deleteDocument } from "@/lib/api/parsing.api";
+import type { IndexDocumentResponse } from "@/types/api.types";
 import type { ParseJob, JobStatus } from "@/types/job.types";
 
 import { DocumentUpload } from "@/components/llamaparse/document-upload";
@@ -35,6 +36,7 @@ export default function HomePageClient() {
       status: JobStatus,
       parsedContent?: string,
       error?: string,
+      vectorStoreId?: string | null,
     ) => {
       setJobs((prev) => {
         const index = prev.findIndex((j) => j.internalJobId === internalJobId);
@@ -47,7 +49,8 @@ export default function HomePageClient() {
           currentJob.status === status &&
           (currentJob.parsedContent === parsedContent ||
             currentJob.parsedText === textToSave) &&
-          currentJob.error === error
+          currentJob.error === error &&
+          currentJob.vectorStoreId === (vectorStoreId || currentJob.vectorStoreId)
         ) {
           return prev;
         }
@@ -59,6 +62,7 @@ export default function HomePageClient() {
           parsedContent,
           parsedText: textToSave,
           error,
+          vectorStoreId: vectorStoreId || currentJob.vectorStoreId,
           updatedAt: new Date().toISOString(),
         };
 
@@ -115,6 +119,7 @@ export default function HomePageClient() {
             apiData.status,
             apiData.parsedContent || apiData.parsedText,
             apiData.error,
+            apiData.vectorStoreId,
           );
           toast.success(`Ingestion finished for "${activeJob.fileName}"`);
         }
@@ -255,6 +260,35 @@ export default function HomePageClient() {
     toast.success("Markdown copied to clipboard!");
   };
 
+  const handleIndexed = (jobId: string, result: IndexDocumentResponse) => {
+    setJobs((prev) => {
+      const updated = prev.map((job) =>
+        job.internalJobId === jobId
+          ? {
+              ...job,
+              vectorStoreId: result.vectorStoreId,
+              chunkCount: result.chunkCount,
+              updatedAt: new Date().toISOString(),
+            }
+          : job,
+      );
+
+      localStorage.setItem("benefitlens-jobs", JSON.stringify(updated));
+      return updated;
+    });
+
+    setSelectedJob((current) =>
+      current?.internalJobId === jobId
+        ? {
+            ...current,
+            vectorStoreId: result.vectorStoreId,
+            chunkCount: result.chunkCount,
+            updatedAt: new Date().toISOString(),
+          }
+        : current,
+    );
+  };
+
   const stats = useMemo(() => {
     const total = jobs.length;
     const processing = jobs.filter(
@@ -327,6 +361,7 @@ export default function HomePageClient() {
         isOpen={selectedJob !== null}
         onClose={() => setSelectedJob(null)}
         onCopy={handleCopyMarkdown}
+        onIndexed={handleIndexed}
       />
     </div>
   );

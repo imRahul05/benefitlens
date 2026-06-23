@@ -10,6 +10,8 @@ export type JobStatus =
 export interface ParseJob {
   internalJobId: string;
   llamaJobId: string;
+  vectorStoreId?: string;
+  chunkCount?: number;
   fileName: string;
   fileSize: number;
   status: JobStatus;

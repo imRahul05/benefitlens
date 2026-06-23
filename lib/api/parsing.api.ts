@@ -1,5 +1,10 @@
 import { http } from "./http";
-import type { UploadResponse, JobStatusResponse } from "../../types/api.types";
+import type {
+  DocumentChunksResponse,
+  IndexDocumentResponse,
+  JobStatusResponse,
+  UploadResponse,
+} from "../../types/api.types";
 import type { JobStatus } from "../../types/job.types";
 
 /**
@@ -32,6 +37,16 @@ export async function getJobStatus(
  */
 export async function deleteDocument(jobId: string): Promise<{ success: boolean }> {
   return http.delete<{ success: boolean }>(`/api/jobs/${jobId}`);
+}
+
+export async function indexDocument(jobId: string): Promise<IndexDocumentResponse> {
+  return http.post<IndexDocumentResponse>(`/api/documents/${jobId}/index`);
+}
+
+export async function getDocumentChunks(
+  jobId: string,
+): Promise<DocumentChunksResponse> {
+  return http.get<DocumentChunksResponse>(`/api/documents/${jobId}/chunks`);
 }
 
 /**

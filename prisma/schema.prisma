@@ -12,35 +12,36 @@ datasource db {
   provider = "postgresql"
 }
 
-
 model Document {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  fileName    String
-  fileSize    Int?
+  fileName String
+  fileSize Int?
 
-  llamaJobId  String?
+  llamaJobId    String?
+  vectorStoreId String?
 
-  status      String
+  status String
 
-  markdown    String?  @db.Text
+  markdown String? @db.Text
+  chunks   Chunk[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Chunk {
-  id          String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  documentId  String
-  chunkIndex  Int
+  documentId String
+  chunkIndex Int
 
-  content     String   @db.Text
+  content String @db.Text
 
-  document    Document @relation(
-    fields: [documentId],
-    references: [id]
-  )
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
 }

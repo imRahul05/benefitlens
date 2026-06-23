@@ -25,6 +25,7 @@ export async function GET(
           status: document.status as "SUCCESS" | "FAILED",
           parsedContent: document.markdown || "",
           parsedText: document.markdown || "",
+          vectorStoreId: document.vectorStoreId,
         });
       }
     }
@@ -97,6 +98,7 @@ export async function GET(
       status: mappedStatus,
       parsedContent: parsedText,
       parsedText,
+      vectorStoreId: document?.vectorStoreId,
       error: jobData.job.error_message || undefined,
     });
   } catch (error: unknown) {
