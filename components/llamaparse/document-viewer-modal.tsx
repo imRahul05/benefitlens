@@ -10,10 +10,12 @@ import {
   Database,
   FileDown,
   FileText,
+  MessageSquareText,
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ChatPanel } from "@/components/chat/chat-panel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,6 +44,7 @@ export function DocumentViewerModal({
   onIndexed,
 }: DocumentViewerModalProps) {
   const [indexedResult, setIndexedResult] = useState<IndexDocumentResponse | null>(null);
+  const [activeView, setActiveView] = useState<"chunks" | "chat">("chunks");
 
   const chunksQuery = useQuery({
     queryKey: ["documentChunks", job?.internalJobId],
@@ -151,6 +154,35 @@ export function DocumentViewerModal({
           <Button
             variant="outline"
             size="sm"
+            className={`border-zinc-800 text-xs gap-1.5 ${
+              activeView === "chunks"
+                ? "bg-zinc-800 text-zinc-100"
+                : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+            }`}
+            onClick={() => setActiveView("chunks")}
+          >
+            <Boxes className="h-3.5 w-3.5" />
+            View Chunks
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className={`border-zinc-800 text-xs gap-1.5 ${
+              activeView === "chat"
+                ? "bg-zinc-800 text-zinc-100"
+                : "bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+            }`}
+            disabled={!activeVectorStoreId}
+            onClick={() => setActiveView("chat")}
+          >
+            <MessageSquareText className="h-3.5 w-3.5" />
+            Chat with Document
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:text-zinc-100 text-zinc-300 gap-1.5 text-xs"
             onClick={() => onCopy(parsedContentText)}
           >
@@ -174,6 +206,13 @@ export function DocumentViewerModal({
         </div>
 
         <div className="flex-1 overflow-y-auto mt-4 pr-1 rounded-md">
+          {activeView === "chat" ? (
+            <ChatPanel
+              documentId={job.internalJobId}
+              fileName={job.fileName}
+              isIndexed={!!activeVectorStoreId}
+            />
+          ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-4">
             <div className="rounded-md border border-zinc-900 bg-zinc-900/30 p-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
@@ -242,6 +281,7 @@ export function DocumentViewerModal({
               )}
             </div>
           </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

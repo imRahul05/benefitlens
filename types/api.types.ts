@@ -33,3 +33,22 @@ export interface IndexDocumentResponse {
   vectorStoreId: string;
   status: "SUCCESS";
 }
+
+export interface ChatSource {
+  chunkId: string;
+  content: string;
+  chunkIndex?: number;
+  fileId?: string;
+  fileName?: string;
+  score?: number;
+}
+
+export interface ChatRequest {
+  documentId: string;
+  message: string;
+}
+
+export interface ChatResponse {
+  answer: string;
+  sources: ChatSource[];
+}

@@ -62,6 +62,8 @@ export async function http<T>(url: string, config: HttpConfig = {}): Promise<T> 
     let errorMessage = `HTTP request failed with status ${response.status}`;
     if (errorData && typeof errorData === "object" && "message" in errorData) {
       errorMessage = String((errorData as { message: unknown }).message);
+    } else if (errorData && typeof errorData === "object" && "error" in errorData) {
+      errorMessage = String((errorData as { error: unknown }).error);
     } else if (typeof errorData === "string") {
       errorMessage = errorData;
     }
