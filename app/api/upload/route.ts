@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LlamaCloud } from "@llamaindex/llama-cloud";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +52,17 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
+
+    // 3. Save initial document metadata and ingestion job to the database
+    await prisma.document.create({
+      data: {
+        id: internalJobId,
+        fileName: file.name,
+        fileSize: file.size,
+        llamaJobId: parseJob.id,
+        status: "PROCESSING",
+      },
+    });
 
     return NextResponse.json({
       internalJobId,

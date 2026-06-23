@@ -28,6 +28,13 @@ export async function getJobStatus(
 }
 
 /**
+ * Deletes a document ingestion record from the database.
+ */
+export async function deleteDocument(jobId: string): Promise<{ success: boolean }> {
+  return http.delete<{ success: boolean }>(`/api/jobs/${jobId}`);
+}
+
+/**
  * Long-polls the status of a parsing job until it completes or fails.
  * Throws a timeout error if it runs for longer than 10 minutes.
  */

@@ -5,7 +5,7 @@ import { useMutation, useQueries } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Spinner } from "@/components/ui/spinner";
-import { uploadDocument, getJobStatus } from "@/lib/api/parsing.api";
+import { uploadDocument, getJobStatus, deleteDocument } from "@/lib/api/parsing.api";
 import type { ParseJob, JobStatus } from "@/types/job.types";
 
 import { DocumentUpload } from "@/components/llamaparse/document-upload";
@@ -187,6 +187,7 @@ export default function HomePageClient() {
           const updated = [...prev];
           updated[index] = {
             ...updated[index],
+            internalJobId: data.internalJobId,
             llamaJobId: data.llamaJobId,
             status: data.status,
             updatedAt: new Date().toISOString(),
@@ -239,6 +240,13 @@ export default function HomePageClient() {
       localStorage.setItem("benefitlens-jobs", JSON.stringify(updated));
       return updated;
     });
+
+    // Call delete API asynchronously to clear PostgreSQL record
+    deleteDocument(internalJobId).catch((err: unknown) => {
+      const errorMsg = err instanceof Error ? err.message : "Failed to delete document from database";
+      console.error("Database deletion error:", errorMsg);
+    });
+
     toast.success("Job removed from history");
   };
 

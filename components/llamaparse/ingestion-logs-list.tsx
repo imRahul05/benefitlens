@@ -4,7 +4,7 @@ import { FileText, Ban, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ProgressSteps } from "./progress-steps";
-import type { ParseJob, JobStatus } from "@/types/job.types";
+import type { ParseJob } from "@/types/job.types";
 
 interface IngestionLogsListProps {
   jobs: ParseJob[];
