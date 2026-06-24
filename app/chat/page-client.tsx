@@ -17,6 +17,7 @@ import { getParsedDocuments } from "@/lib/api/parsing.api";
 import type { ParsedDocumentSummary } from "@/types/api.types";
 import { cn } from "@/lib/utils";
 
+
 function formatFileSize(bytes: number | null) {
   if (!bytes) {
     return "Unknown size";
@@ -47,11 +48,10 @@ function DocumentRow({
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full rounded-md border p-3 text-left transition-colors ${
-        selected
+      className={`w-full rounded-md border p-3 text-left transition-colors ${selected
           ? "border-emerald-500/40 bg-emerald-500/10"
           : "border-zinc-900 bg-zinc-950/50 hover:border-zinc-700 hover:bg-zinc-900/50"
-      }`}
+        }`}
     >
       <div className="flex items-start gap-3">
         <div className="mt-0.5 rounded-md border border-zinc-800 bg-zinc-900 p-2">
