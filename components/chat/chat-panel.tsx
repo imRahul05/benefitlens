@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, MessageSquareText } from "lucide-react";
 import type { ChatStatus } from "ai";
+import { cn } from "@/lib/utils";
 
 import {
   Conversation,
@@ -175,7 +176,10 @@ export function ChatPanel({
 
   return (
     <div
-      className={`flex h-[58vh] min-h-[460px] flex-col rounded-md border border-zinc-900 bg-zinc-950/70 ${className ?? ""}`}
+      className={cn(
+        "flex h-[58vh] min-h-[460px] flex-col rounded-md border border-zinc-900 bg-zinc-950/70",
+        className
+      )}
     >
       <div className="border-b border-zinc-900 px-4 py-3">
         <p className="text-sm font-semibold text-zinc-100">Chat with Document</p>
