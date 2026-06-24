@@ -3,6 +3,11 @@
 import { FileText, Ban, AlertCircle, Trash2, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  isFailedJobStatus,
+  isRunningJobStatus,
+  isSuccessfulJobStatus,
+} from "@/lib/jobs/job-constant";
 import { ProgressSteps } from "./progress-steps";
 import type { ParseJob } from "@/types/job.types";
 
@@ -51,13 +56,8 @@ export function IngestionLogsList({
         ) : (
           <div className="divide-y divide-zinc-900 max-h-[550px] overflow-y-auto">
             {jobs.map((job) => {
-              const isJobFailed =
-                job.status === "FAILED" ||
-                job.status === "ERROR" ||
-                job.status === "CANCELLED";
-
-              const isRunning =
-                job.status === "PROCESSING" || job.status === "PENDING";
+              const isJobFailed = isFailedJobStatus(job.status);
+              const isRunning = isRunningJobStatus(job.status);
 
               return (
                 <div
@@ -118,7 +118,7 @@ export function IngestionLogsList({
                       )}
 
                       {/* View Result */}
-                      {(job.status === "SUCCESS" || job.status === "PARTIAL_SUCCESS") && (
+                      {isSuccessfulJobStatus(job.status) && (
                         <Button
                           variant="secondary"
                           size="sm"
@@ -142,7 +142,7 @@ export function IngestionLogsList({
                   </div>
 
                   {/* Progressive Steps Visual Stepper */}
-                  {(isRunning || isJobFailed || job.status === "SUCCESS" || job.status === "PARTIAL_SUCCESS") && (
+                  {(isRunning || isJobFailed || isSuccessfulJobStatus(job.status)) && (
                     <ProgressSteps
                       status={job.status}
                       isUploading={isUploading && uploadingFileName === job.fileName}

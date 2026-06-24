@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LlamaCloud } from "@llamaindex/llama-cloud";
+import { internalServerError } from "@/lib/api/server-errors";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
@@ -70,10 +71,6 @@ export async function POST(request: NextRequest) {
       status: "PROCESSING",
     });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: `Failed to upload file: ${errorMessage}` },
-      { status: 500 },
-    );
+    return internalServerError("Failed to upload file", error);
   }
 }

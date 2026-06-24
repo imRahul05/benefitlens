@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { internalServerError } from "@/lib/api/server-errors";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -38,11 +39,6 @@ export async function GET() {
       })),
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    return NextResponse.json(
-      { error: `Failed to load parsed documents: ${message}` },
-      { status: 500 },
-    );
+    return internalServerError("Failed to load parsed documents", error);
   }
 }

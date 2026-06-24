@@ -1,6 +1,7 @@
 "use client";
 
 import { Spinner } from "@/components/ui/spinner";
+import { isFailedJobStatus, isSuccessfulJobStatus } from "@/lib/jobs/job-constant";
 import { cn } from "@/lib/utils";
 import type { JobStatus } from "@/types/job.types";
 
@@ -24,14 +25,11 @@ export function ProgressSteps({ status, isUploading = false }: ProgressStepsProp
     currentStepIndex = 1;
   } else if (status === "PROCESSING") {
     currentStepIndex = 2;
-  } else if (status === "SUCCESS" || status === "PARTIAL_SUCCESS") {
+  } else if (isSuccessfulJobStatus(status)) {
     currentStepIndex = 3;
   }
 
-  const isFailed =
-    status === "FAILED" ||
-    status === "ERROR" ||
-    status === "CANCELLED";
+  const isFailed = isFailedJobStatus(status);
 
   return (
     <div className="flex items-center w-full gap-1 mt-3 p-3 bg-zinc-950/70 border border-zinc-900 rounded-lg overflow-x-auto">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { internalServerError } from "@/lib/api/server-errors";
 import { DocumentIndexingError, indexDocument } from "@/lib/ingestion/document-indexer";
 
 export async function POST(
@@ -19,11 +20,6 @@ export async function POST(
       );
     }
 
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    return NextResponse.json(
-      { error: `Failed to index document: ${message}` },
-      { status: 500 },
-    );
+    return internalServerError("Failed to index document", error);
   }
 }
