@@ -75,7 +75,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
-                      asChild
                       isActive={isActive}
                       tooltip={item.title}
                       className={`w-full transition-all duration-200 ${
@@ -83,11 +82,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15 hover:text-emerald-300 font-medium"
                           : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
                       }`}
+                      render={<Link href={item.url} className="flex items-center gap-3" />}
                     >
-                      <Link href={item.url} className="flex items-center gap-3">
-                        <Icon className="size-4" />
-                        <span>{item.title}</span>
-                      </Link>
+                      <Icon className="size-4" />
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
