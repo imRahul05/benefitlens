@@ -301,7 +301,7 @@ export default function HomePageClient() {
   }, [jobs]);
 
   return (
-    <div className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8 min-h-screen">
+    <div className="flex-1 w-full max-w-6xl mx-auto px-4 py-8 flex flex-col gap-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
         <div>

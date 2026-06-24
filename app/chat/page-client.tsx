@@ -108,76 +108,75 @@ export default function ChatPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-4 px-4 py-5">
-        <header className="flex flex-col gap-3 border-b border-zinc-900 pb-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
-              Document Chat
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Ask grounded questions against parsed and indexed documents.
+    <div className="mx-auto flex h-[calc(100vh-3.5rem)] w-full max-w-7xl flex-col gap-4 px-4 py-5 overflow-hidden">
+      <header className="flex flex-col gap-3 border-b border-zinc-900 pb-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+            Document Chat
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Ask grounded questions against parsed and indexed documents.
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-fit border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+          onClick={() => documentsQuery.refetch()}
+          disabled={documentsQuery.isFetching}
+        >
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${documentsQuery.isFetching ? "animate-spin" : ""}`}
+          />
+          Refresh docs
+        </Button>
+      </header>
+
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <main className="min-h-0">
+          <ChatPanel
+            key={selectedDocument?.id ?? "new-chat"}
+            documentId={selectedDocument?.id ?? ""}
+            fileName={selectedDocument?.fileName ?? "New chat"}
+            isIndexed={!!selectedDocument?.vectorStoreId}
+            className="h-[calc(100vh-196px)] min-h-[460px]"
+            onDocumentReady={handleDocumentReady}
+          />
+        </main>
+
+        <aside className="min-h-0 rounded-md border border-zinc-900 bg-zinc-950/70 flex flex-col">
+          <div className="border-b border-zinc-900 px-4 py-3">
+            <p className="text-sm font-semibold text-zinc-100">Parsed Docs</p>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Select a document to chat with.
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-fit border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
-            onClick={() => documentsQuery.refetch()}
-            disabled={documentsQuery.isFetching}
-          >
-            <RefreshCw
-              className={`h-3.5 w-3.5 ${documentsQuery.isFetching ? "animate-spin" : ""}`}
-            />
-            Refresh docs
-          </Button>
-        </header>
-
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <main className="min-h-0">
-            <ChatPanel
-              key={selectedDocument?.id ?? "new-chat"}
-              documentId={selectedDocument?.id ?? ""}
-              fileName={selectedDocument?.fileName ?? "New chat"}
-              isIndexed={!!selectedDocument?.vectorStoreId}
-              className="h-[calc(100vh-140px)] min-h-[560px]"
-              onDocumentReady={handleDocumentReady}
-            />
-          </main>
-
-          <aside className="min-h-0 rounded-md border border-zinc-900 bg-zinc-950/70">
-            <div className="border-b border-zinc-900 px-4 py-3">
-              <p className="text-sm font-semibold text-zinc-100">Parsed Docs</p>
-              <p className="mt-0.5 text-xs text-zinc-500">
-                Select a document to chat with.
-              </p>
-            </div>
-
-            <div className="max-h-[calc(100vh-190px)] space-y-2 overflow-y-auto p-3">
-              {documentsQuery.isLoading ? (
-                <div className="flex items-center gap-2 p-3 text-sm text-zinc-500">
-                  <Spinner size="sm" />
-                  Loading documents...
-                </div>
-              ) : documents.length === 0 ? (
-                <div className="rounded-md border border-zinc-900 bg-zinc-900/30 p-4 text-sm text-zinc-500">
-                  No parsed documents found.
-                </div>
-              ) : (
-                documents.map((document) => (
-                  <DocumentRow
-                    key={document.id}
-                    document={document}
-                    selected={selectedDocument?.id === document.id}
-                    onSelect={() => setSelectedDocumentId(document.id)}
-                  />
-                ))
-              )}
-            </div>
-          </aside>
-        </div>
+          <div className="flex-1 space-y-2 overflow-y-auto p-3">
+            {documentsQuery.isLoading ? (
+              <div className="flex items-center gap-2 p-3 text-sm text-zinc-500">
+                <Spinner size="sm" />
+                Loading documents...
+              </div>
+            ) : documents.length === 0 ? (
+              <div className="rounded-md border border-zinc-900 bg-zinc-900/30 p-4 text-sm text-zinc-500">
+                No parsed documents found.
+              </div>
+            ) : (
+              documents.map((document) => (
+                <DocumentRow
+                  key={document.id}
+                  document={document}
+                  selected={selectedDocument?.id === document.id}
+                  onSelect={() => setSelectedDocumentId(document.id)}
+                />
+              ))
+            )}
+          </div>
+        </aside>
       </div>
     </div>
   );
 }
+
