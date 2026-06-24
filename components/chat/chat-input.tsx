@@ -38,7 +38,7 @@ interface ChatInputProps {
   disabled?: boolean;
   placeholder?: string;
   onChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: (message: PromptInputMessage) => void | Promise<void>;
 }
 
 // const models = [
@@ -86,7 +86,7 @@ export function ChatInput({
       return;
     }
 
-    onSubmit();
+    onSubmit(message);
   };
 
   return (
@@ -111,10 +111,7 @@ export function ChatInput({
       <PromptInputFooter>
         <PromptInputTools>
           <PromptInputActionMenu>
-            <PromptInputActionMenuTrigger
-              disabled={disabled}
-              tooltip="Add context"
-            />
+            <PromptInputActionMenuTrigger disabled={disabled} />
             <PromptInputActionMenuContent>
               <PromptInputActionAddAttachments disabled={disabled} />
               <PromptInputActionAddScreenshot disabled={disabled} />

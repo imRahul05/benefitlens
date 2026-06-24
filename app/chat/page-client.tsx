@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
   Database,
   FileText,
-  MessageSquareText,
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,7 +13,7 @@ import { toast } from "sonner";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { getParsedDocuments, indexDocument } from "@/lib/api/parsing.api";
+import { getParsedDocuments } from "@/lib/api/parsing.api";
 import type { ParsedDocumentSummary } from "@/types/api.types";
 
 function formatFileSize(bytes: number | null) {
@@ -102,19 +101,11 @@ export default function ChatPageClient() {
     documents[0] ??
     null;
 
-  const indexMutation = useMutation({
-    mutationFn: (documentId: string) => indexDocument(documentId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["parsedDocuments"] });
-      toast.success("Document indexed. Chat is ready.");
-    },
-    onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Indexing failed";
-      toast.error(message);
-    },
-  });
-
-  const isSelectedIndexed = !!selectedDocument?.vectorStoreId;
+  const handleDocumentReady = async (documentId: string) => {
+    setSelectedDocumentId(documentId);
+    await queryClient.invalidateQueries({ queryKey: ["parsedDocuments"] });
+    toast.success("Document parsed and indexed. Chat is ready.");
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50">
@@ -145,49 +136,14 @@ export default function ChatPageClient() {
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
           <main className="min-h-0">
-            {!selectedDocument ? (
-              <div className="flex h-[calc(100vh-140px)] min-h-[520px] flex-col items-center justify-center rounded-md border border-zinc-900 bg-zinc-950/70 p-8 text-center">
-                <MessageSquareText className="h-10 w-10 text-zinc-700" />
-                <p className="mt-3 text-sm font-semibold text-zinc-300">
-                  No parsed documents yet
-                </p>
-                <p className="mt-1 max-w-sm text-sm text-zinc-500">
-                  Upload and parse a document from the ingestion page, then return here
-                  to chat with it.
-                </p>
-              </div>
-            ) : isSelectedIndexed ? (
-              <ChatPanel
-                key={selectedDocument.id}
-                documentId={selectedDocument.id}
-                fileName={selectedDocument.fileName}
-                isIndexed
-                className="h-[calc(100vh-140px)] min-h-[560px]"
-              />
-            ) : (
-              <div className="flex h-[calc(100vh-140px)] min-h-[560px] flex-col items-center justify-center rounded-md border border-zinc-900 bg-zinc-950/70 p-8 text-center">
-                <Database className="h-10 w-10 text-amber-500" />
-                <p className="mt-3 text-sm font-semibold text-zinc-200">
-                  Index this document to continue
-                </p>
-                <p className="mt-1 max-w-md text-sm text-zinc-500">
-                  {selectedDocument.fileName} has parsed markdown, but no OpenAI
-                  vector store yet. Index it before starting chat.
-                </p>
-                <Button
-                  className="mt-5 bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
-                  disabled={indexMutation.isPending}
-                  onClick={() => indexMutation.mutate(selectedDocument.id)}
-                >
-                  {indexMutation.isPending ? (
-                    <Spinner size="sm" className="text-zinc-950" />
-                  ) : (
-                    <Database className="h-4 w-4" />
-                  )}
-                  Index this doc
-                </Button>
-              </div>
-            )}
+            <ChatPanel
+              key={selectedDocument?.id ?? "new-chat"}
+              documentId={selectedDocument?.id ?? ""}
+              fileName={selectedDocument?.fileName ?? "New chat"}
+              isIndexed={!!selectedDocument?.vectorStoreId}
+              className="h-[calc(100vh-140px)] min-h-[560px]"
+              onDocumentReady={handleDocumentReady}
+            />
           </main>
 
           <aside className="min-h-0 rounded-md border border-zinc-900 bg-zinc-950/70">
