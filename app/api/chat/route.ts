@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { internalServerError } from "@/lib/api/server-errors";
 import { askDocumentQuestion, RagChatError } from "@/lib/rag/file-search";
 import type { ChatRequest } from "@/types/api.types";
 
@@ -38,11 +39,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    return NextResponse.json(
-      { error: `Failed to answer document question: ${message}` },
-      { status: 500 },
-    );
+    return internalServerError("Failed to answer document question", error);
   }
 }

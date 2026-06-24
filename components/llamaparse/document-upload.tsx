@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UploadCloud } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { SUPPORTED_UPLOAD_ACCEPT } from "@/lib/uploads/file-validation";
 import { cn } from "@/lib/utils";
 
 interface DocumentUploadProps {
@@ -63,7 +64,7 @@ export function DocumentUpload({ isPending, onUpload }: DocumentUploadProps) {
             type="file"
             id="file-input"
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp"
+            accept={SUPPORTED_UPLOAD_ACCEPT}
             onChange={handleFileChange}
             disabled={isPending}
           />

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { internalServerError } from "@/lib/api/server-errors";
 import {
   DocumentIndexingError,
   getDocumentChunkSummaries,
@@ -22,11 +23,6 @@ export async function GET(
       );
     }
 
-    const message = error instanceof Error ? error.message : "Unknown error";
-
-    return NextResponse.json(
-      { error: `Failed to load document chunks: ${message}` },
-      { status: 500 },
-    );
+    return internalServerError("Failed to load document chunks", error);
   }
 }

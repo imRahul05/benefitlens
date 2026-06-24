@@ -1,81 +1,33 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueries } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Spinner } from "@/components/ui/spinner";
 import { uploadDocument, getJobStatus, deleteDocument } from "@/lib/api/parsing.api";
+import {
+  isJobStatus,
+  isRunningJobStatus,
+  isSuccessfulJobStatus,
+  isTerminalJobStatus,
+} from "@/lib/jobs/job-constant";
+import { validateUploadFile } from "@/lib/uploads/file-validation";
+import { usePersistentJobs } from "@/hooks/use-persistent-jobs";
 import type { IndexDocumentResponse } from "@/types/api.types";
-import type { ParseJob, JobStatus } from "@/types/job.types";
+import type { ParseJob } from "@/types/job.types";
 
 import { DocumentUpload } from "@/components/llamaparse/document-upload";
 import { IngestionLogsList } from "@/components/llamaparse/ingestion-logs-list";
 import { DocumentViewerModal } from "@/components/llamaparse/document-viewer-modal";
 
 export default function HomePageClient() {
-  const [jobs, setJobs] = useState<ParseJob[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("benefitlens-jobs");
-        return stored ? (JSON.parse(stored) as ParseJob[]) : [];
-      } catch (e) {
-        console.error("Failed to parse stored jobs", e);
-        return [];
-      }
-    }
-    return [];
-  });
-
+  const { jobs, setJobs, updateJobStatus } = usePersistentJobs();
   const [selectedJob, setSelectedJob] = useState<ParseJob | null>(null);
-
-  // Update a job in state and save to localStorage
-  const updateJobStatus = useCallback(
-    (
-      internalJobId: string,
-      status: JobStatus,
-      parsedContent?: string,
-      error?: string,
-      vectorStoreId?: string | null,
-    ) => {
-      setJobs((prev) => {
-        const index = prev.findIndex((j) => j.internalJobId === internalJobId);
-        if (index === -1) return prev;
-        const currentJob = prev[index];
-
-        const textToSave = parsedContent || currentJob.parsedText || "";
-
-        if (
-          currentJob.status === status &&
-          (currentJob.parsedContent === parsedContent ||
-            currentJob.parsedText === textToSave) &&
-          currentJob.error === error &&
-          currentJob.vectorStoreId === (vectorStoreId || currentJob.vectorStoreId)
-        ) {
-          return prev;
-        }
-
-        const updated = [...prev];
-        updated[index] = {
-          ...currentJob,
-          status,
-          parsedContent,
-          parsedText: textToSave,
-          error,
-          vectorStoreId: vectorStoreId || currentJob.vectorStoreId,
-          updatedAt: new Date().toISOString(),
-        };
-
-        localStorage.setItem("benefitlens-jobs", JSON.stringify(updated));
-        return updated;
-      });
-    },
-    [],
-  );
 
   // Poll active jobs
   const activeJobs = useMemo(() => {
-    return jobs.filter((job) => job.status === "PROCESSING" || job.status === "PENDING");
+    return jobs.filter((job) => isRunningJobStatus(job.status));
   }, [jobs]);
 
   // Set up React Query polling
@@ -86,18 +38,12 @@ export default function HomePageClient() {
       refetchInterval: (query: unknown) => {
         const data = query as { state?: { data?: { status?: string } } };
         const status = data?.state?.data?.status;
-        if (
-          status === "SUCCESS" ||
-          status === "PARTIAL_SUCCESS" ||
-          status === "FAILED" ||
-          status === "ERROR" ||
-          status === "CANCELLED"
-        ) {
+        if (isJobStatus(status) && isTerminalJobStatus(status)) {
           return false;
         }
         return 3000;
       },
-      enabled: (job.status === "PROCESSING" || job.status === "PENDING") && !!job.llamaJobId,
+      enabled: isRunningJobStatus(job.status) && !!job.llamaJobId,
     })),
   });
 
@@ -107,13 +53,7 @@ export default function HomePageClient() {
       if (result.isSuccess && result.data) {
         const activeJob = activeJobs[index];
         const apiData = result.data;
-        if (
-          apiData.status === "SUCCESS" ||
-          apiData.status === "PARTIAL_SUCCESS" ||
-          apiData.status === "FAILED" ||
-          apiData.status === "ERROR" ||
-          apiData.status === "CANCELLED"
-        ) {
+        if (isTerminalJobStatus(apiData.status)) {
           updateJobStatus(
             activeJob.internalJobId,
             apiData.status,
@@ -140,7 +80,7 @@ export default function HomePageClient() {
       const now = Date.now();
 
       jobs.forEach((job) => {
-        if (job.status === "PROCESSING" || job.status === "PENDING") {
+        if (isRunningJobStatus(job.status)) {
           const startTime = new Date(job.createdAt).getTime();
           if (now - startTime > tenMinutesMs) {
             updateJobStatus(
@@ -178,7 +118,6 @@ export default function HomePageClient() {
 
       setJobs((prev) => {
         const updated = [newJob, ...prev];
-        localStorage.setItem("benefitlens-jobs", JSON.stringify(updated));
         return updated;
       });
 
@@ -197,7 +136,6 @@ export default function HomePageClient() {
             status: data.status,
             updatedAt: new Date().toISOString(),
           };
-          localStorage.setItem("benefitlens-jobs", JSON.stringify(updated));
           return updated;
         });
         toast.info("Document uploaded successfully! Beginning status tracking...");
@@ -213,26 +151,9 @@ export default function HomePageClient() {
   });
 
   const triggerUpload = (file: File) => {
-    const validExtensions = [
-      ".pdf",
-      ".docx",
-      ".txt",
-      ".png",
-      ".jpg",
-      ".jpeg",
-      ".webp",
-    ];
-    const extension = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
-
-    if (!validExtensions.includes(extension)) {
-      toast.error(
-        "Invalid file type! Supported formats: PDF, DOCX, TXT, and Images (PNG, JPG, WEBP).",
-      );
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File is too large! Maximum limit is 10MB.");
+    const validation = validateUploadFile(file);
+    if (!validation.valid) {
+      toast.error(validation.message);
       return;
     }
 
@@ -242,7 +163,6 @@ export default function HomePageClient() {
   const handleDelete = (internalJobId: string) => {
     setJobs((prev) => {
       const updated = prev.filter((j) => j.internalJobId !== internalJobId);
-      localStorage.setItem("benefitlens-jobs", JSON.stringify(updated));
       return updated;
     });
 
@@ -273,7 +193,6 @@ export default function HomePageClient() {
           : job,
       );
 
-      localStorage.setItem("benefitlens-jobs", JSON.stringify(updated));
       return updated;
     });
 
@@ -291,12 +210,8 @@ export default function HomePageClient() {
 
   const stats = useMemo(() => {
     const total = jobs.length;
-    const processing = jobs.filter(
-      (j) => j.status === "PROCESSING" || j.status === "PENDING",
-    ).length;
-    const success = jobs.filter(
-      (j) => j.status === "SUCCESS" || j.status === "PARTIAL_SUCCESS",
-    ).length;
+    const processing = jobs.filter((j) => isRunningJobStatus(j.status)).length;
+    const success = jobs.filter((j) => isSuccessfulJobStatus(j.status)).length;
     return { total, processing, success };
   }, [jobs]);
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LlamaCloud } from "@llamaindex/llama-cloud";
+import { internalServerError } from "@/lib/api/server-errors";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -102,11 +103,7 @@ export async function GET(
       error: jobData.job.error_message || undefined,
     });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: `Failed to fetch job status: ${errorMessage}` },
-      { status: 500 },
-    );
+    return internalServerError("Failed to fetch job status", error);
   }
 }
 
@@ -130,10 +127,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: `Failed to delete document: ${errorMessage}` },
-      { status: 500 },
-    );
+    return internalServerError("Failed to delete document", error);
   }
 }

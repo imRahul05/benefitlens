@@ -6,6 +6,7 @@ import type {
   ParsedDocumentsResponse,
   UploadResponse,
 } from "../../types/api.types";
+import { isTerminalJobStatus } from "../jobs/job-constant";
 import type { JobStatus } from "../../types/job.types";
 
 /**
@@ -67,14 +68,6 @@ export async function waitForCompletion(
   const timeoutMs = 10 * 60 * 1000; // 10 minutes
   const pollIntervalMs = 3000; // 3 seconds
 
-  const terminalStatuses: JobStatus[] = [
-    "SUCCESS",
-    "ERROR",
-    "CANCELLED",
-    "PARTIAL_SUCCESS",
-    "FAILED",
-  ];
-
   return new Promise((resolve, reject) => {
     const poll = async () => {
       // Check for 10-minute timeout
@@ -90,7 +83,7 @@ export async function waitForCompletion(
           onProgress(response.status);
         }
 
-        if (terminalStatuses.includes(response.status)) {
+        if (isTerminalJobStatus(response.status)) {
           resolve(response);
         } else {
           setTimeout(poll, pollIntervalMs);
