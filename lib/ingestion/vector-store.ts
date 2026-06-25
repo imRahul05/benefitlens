@@ -1,4 +1,5 @@
 import OpenAI, { toFile, type Uploadable } from "openai";
+import { env } from "@/config/env.config";
 
 interface VectorStoreChunk {
   chunkIndex: number;
@@ -12,12 +13,7 @@ interface CreateVectorStoreInput {
 }
 
 function getOpenAIClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured.");
-  }
-
-  return new OpenAI({ apiKey });
+  return new OpenAI({ apiKey: env.OPENAI_API_KEY });
 }
 
 function sanitizeFileName(fileName: string) {

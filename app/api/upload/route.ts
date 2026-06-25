@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LlamaCloud } from "@llamaindex/llama-cloud";
+import { env } from "@/config/env.config";
 import { internalServerError } from "@/lib/api/server-errors";
 import { prisma } from "@/lib/prisma";
 
@@ -15,17 +16,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.LLAMA_CLOUD_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "LlamaCloud API Key is not configured in environment variables." },
-        { status: 500 },
-      );
-    }
-
     const internalJobId = crypto.randomUUID();
 
-    const client = new LlamaCloud({ apiKey });
+    const client = new LlamaCloud({ apiKey: env.LLAMA_CLOUD_API_KEY });
 
     // 1. Upload file using client.files.create
     const fileObj = await client.files.create({

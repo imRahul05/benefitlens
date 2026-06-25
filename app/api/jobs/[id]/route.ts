@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LlamaCloud } from "@llamaindex/llama-cloud";
+import { env } from "@/config/env.config";
 import { internalServerError } from "@/lib/api/server-errors";
 import { prisma } from "@/lib/prisma";
 
@@ -41,15 +42,7 @@ export async function GET(
       });
     }
 
-    const apiKey = process.env.LLAMA_CLOUD_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "LlamaCloud API Key is not configured for direct polling." },
-        { status: 500 },
-      );
-    }
-
-    const client = new LlamaCloud({ apiKey });
+    const client = new LlamaCloud({ apiKey: env.LLAMA_CLOUD_API_KEY });
 
     // Retrieve parse job with expanded markdown content
     const jobData = await client.parsing.get(activeLlamaJobId, {
