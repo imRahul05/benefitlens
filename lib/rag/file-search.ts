@@ -6,7 +6,7 @@ import type {
 
 import { prisma } from "@/lib/prisma";
 import type { ChatResponse, ChatSource } from "@/types/api.types";
-import { OPENAI_RAG_MODEL } from "@/config/env.config";
+import { env } from "@/config/env.config";
 
 
 
@@ -21,12 +21,7 @@ export class RagChatError extends Error {
 }
 
 function getOpenAIClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new RagChatError("OPENAI_API_KEY is not configured.", 500);
-  }
-
-  return new OpenAI({ apiKey });
+  return new OpenAI({ apiKey: env.OPENAI_API_KEY });
 }
 
 function extractChunkIndexFromFileName(fileName?: string) {
@@ -91,7 +86,7 @@ export async function askDocumentQuestion(
   }
 
   const client = getOpenAIClient();
-  const model = OPENAI_RAG_MODEL;
+  const model = env.OPENAI_RAG_MODEL;
 
   const response = await client.responses.create({
     model,
