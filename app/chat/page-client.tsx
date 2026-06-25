@@ -98,10 +98,9 @@ export default function ChatPageClient() {
     [documentsQuery.data?.documents],
   );
 
-  const selectedDocument =
-    documents.find((document) => document.id === selectedDocumentId) ??
-    documents[0] ??
-    null;
+  const selectedDocument = selectedDocumentId
+    ? documents.find((document) => document.id === selectedDocumentId) ?? null
+    : null;
 
   const handleDocumentReady = async (documentId: string) => {
     setSelectedDocumentId(documentId);

@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { AlertCircle, MessageSquareText } from "lucide-react";
+import { AlertCircle, Database, MessageSquareText, RefreshCw } from "lucide-react";
 import type { ChatStatus } from "ai";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 import {
   Conversation,
@@ -102,9 +103,23 @@ export function ChatPanel({
     },
   });
 
+  const indexMutation = useMutation({
+    mutationFn: () => indexDocument(documentId),
+    onSuccess: async () => {
+      await onDocumentReady?.(documentId);
+    },
+    onError: (mutationError: unknown) => {
+      const message =
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Indexing failed.";
+      setError(message);
+    },
+  });
+
   const status = useMemo<ChatStatus>(() => {
-    return chatMutation.isPending || ingestionStage ? "submitted" : "ready";
-  }, [chatMutation.isPending, ingestionStage]);
+    return chatMutation.isPending || ingestionStage || indexMutation.isPending ? "submitted" : "ready";
+  }, [chatMutation.isPending, ingestionStage, indexMutation.isPending]);
 
   const ingestAttachedDocument = async (
     filePart: PromptInputMessage["files"][number],
@@ -130,7 +145,7 @@ export function ChatPanel({
 
   const handleSubmit = async (message: PromptInputMessage) => {
     const trimmedInput = message.text.trim();
-    if (!trimmedInput || chatMutation.isPending || ingestionStage) {
+    if (!trimmedInput || chatMutation.isPending || ingestionStage || indexMutation.isPending) {
       return;
     }
 
@@ -187,49 +202,87 @@ export function ChatPanel({
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <Conversation className="min-h-0">
-          <ConversationContent className="gap-5 p-4">
-            {messages.length === 0 ? (
-              <ConversationEmptyState
-                icon={<MessageSquareText className="size-10" />}
-                title={isIndexed ? "Ask a document question" : "Attach a document"}
-                description={
-                  isIndexed
-                    ? "Answers are grounded in the selected OpenAI vector store."
-                    : "Send a message with a file or photo to parse and index it automatically."
-                }
-              />
-            ) : (
-              messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
-              ))
-            )}
-
-            {progressMessage && (
-              <div className="rounded-md border border-zinc-900 bg-zinc-900/40 px-3 py-2 text-xs text-zinc-400">
-                {progressMessage}
+        {documentId && !isIndexed ? (
+          <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+            <div className="rounded-full bg-amber-500/10 p-3 text-amber-500 mb-4 border border-amber-500/20">
+              <Database className="h-6 w-6 animate-pulse" />
+            </div>
+            <h3 className="text-sm font-semibold text-zinc-100">Indexing Required</h3>
+            <p className="mt-1.5 text-xs text-zinc-450 max-w-sm leading-relaxed">
+              "{fileName}" is parsed but not yet indexed in the vector store. Indexing is required to ask questions and search its content.
+            </p>
+            {error && (
+              <div className="mt-4 flex items-start gap-2 rounded-md border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300 text-left max-w-sm">
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{error}</span>
               </div>
             )}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
-
-        {error && (
-          <div className="mx-4 mb-2 flex items-start gap-2 rounded-md border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
-            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span>{error}</span>
+            <Button
+              type="button"
+              className="mt-5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 font-semibold transition-colors cursor-pointer"
+              disabled={indexMutation.isPending}
+              onClick={() => indexMutation.mutate()}
+            >
+              {indexMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  Indexing Document...
+                </>
+              ) : (
+                <>
+                  <Database className="h-3.5 w-3.5" />
+                  Index Document
+                </>
+              )}
+            </Button>
           </div>
-        )}
+        ) : (
+          <>
+            <Conversation className="min-h-0">
+              <ConversationContent className="gap-5 p-4">
+                {messages.length === 0 ? (
+                  <ConversationEmptyState
+                    icon={<MessageSquareText className="size-10" />}
+                    title={isIndexed ? "Ask a document question" : "Select a document or attach one"}
+                    description={
+                      isIndexed
+                        ? "Answers are grounded in the selected OpenAI vector store."
+                        : "Select a parsed document from the sidebar, or attach a new document to parse and index it automatically."
+                    }
+                  />
+                ) : (
+                  messages.map((message) => (
+                    <ChatMessage key={message.id} message={message} />
+                  ))
+                )}
 
-        <div className="border-t border-zinc-900 p-3">
-          <ChatInput
-            value={input}
-            status={status}
-            disabled={chatMutation.isPending || !!ingestionStage}
-            onChange={setInput}
-            onSubmit={handleSubmit}
-          />
-        </div>
+                {progressMessage && (
+                  <div className="rounded-md border border-zinc-900 bg-zinc-900/40 px-3 py-2 text-xs text-zinc-400">
+                    {progressMessage}
+                  </div>
+                )}
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+
+            {error && (
+              <div className="mx-4 mb-2 flex items-start gap-2 rounded-md border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-300">
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div className="border-t border-zinc-900 p-3">
+              <ChatInput
+                value={input}
+                status={status}
+                disabled={chatMutation.isPending || !!ingestionStage || indexMutation.isPending}
+                onChange={setInput}
+                onSubmit={handleSubmit}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
