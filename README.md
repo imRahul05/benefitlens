@@ -22,6 +22,14 @@ The primary objective of BenefitLens is to simplify the consumption of dense, un
 
 ---
 
+## App Structure
+
+- `/` — Landing page explaining the product.
+- `/workspace` — The single product page: upload a document, watch it parse and index in the library, then chat with it. Document details (parsed markdown, chunks, copy/download, delete) open in a side sheet.
+- `/homepage` and `/chat` — Legacy routes that redirect to `/workspace`.
+
+---
+
 ## System Architecture
 
 The BenefitLens architecture consists of a Next.js single-page client interface, Next.js API route handlers, localized ingestion/RAG services, and external integrations with LlamaCloud and OpenAI.
@@ -30,10 +38,10 @@ The BenefitLens architecture consists of a Next.js single-page client interface,
 flowchart TB
     %% Subgraphs
     subgraph Client ["Client Layer (Next.js Client Components)"]
-        A["HomePageClient"]
-        B["DocumentUpload (Drag & Drop)"]
-        C["IngestionLogsList (Logs & Progress)"]
-        D["DocumentViewerModal (Viewer & Chat Panel)"]
+        A["Workspace (/workspace)"]
+        B["UploadDropzone + useDocumentPipeline"]
+        C["DocumentLibrary (Library & Progress)"]
+        D["ChatPanel + DocumentDetailsSheet"]
         E[("LocalStorage (Local Job Cache)")]
         F["React Query (Polling & Mutations)"]
     end
@@ -119,20 +127,20 @@ flowchart TB
 ## Technical Workflows
 
 ### 1. Ingestion & Extraction Workflow
-1. The client uploads a file through `DocumentUpload`.
+1. The user uploads a file from the workspace (`UploadDropzone` or "New document").
 2. The client triggers the `POST /api/upload` endpoint, creating a record in PostgreSQL with status `PROCESSING`.
 3. The API handler sends the file payload to the LlamaCloud API, which initiates a parsing job.
 4. The client polls `GET /api/jobs/[id]`, which checks the LlamaCloud job status. When LlamaCloud completes the extraction, the API handler caches the returned markdown text in PostgreSQL and marks the document status as `SUCCESS`.
 
 ### 2. Chunking & Indexing Workflow
-1. When the user clicks "Index", the client triggers `POST /api/documents/[id]/index`.
+1. As soon as parsing succeeds, the workspace automatically triggers `POST /api/documents/[id]/index` (documents parsed earlier can be indexed from the chat view).
 2. The server loads the cached markdown from PostgreSQL and runs it through the `chunkMarkdown` sliding-window utility.
 3. The generated chunks are persisted to the database under the `Chunk` table.
 4. The server packages these chunks into temporary markdown files, uploads them to OpenAI, and creates a Vector Store.
 5. The resulting `vectorStoreId` is written to the database record, making the document ready for query.
 
 ### 3. Retrieval-Augmented Generation (RAG) Chat Workflow
-1. The user enters a question in the chat panel of `DocumentViewerModal`.
+1. The workspace opens the chat for the document once it is indexed, and the user enters a question in `ChatPanel`.
 2. The client issues a `POST /api/chat` request containing the `documentId` and the query text.
 3. The server invokes OpenAI's Responses API using the `file_search` tool, passing the document's `vectorStoreId`.
 4. OpenAI retrieves the most relevant chunks from its vector storage and generates a grounded response.
